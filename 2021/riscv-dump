@@ -1,0 +1,12 @@
+#!/bin/env zsh
+
+elf=(=())
+bin=(=())
+riscv64-linux-gnu-as $1 -o $elf
+objcopy -I elf64-little -O binary -j .text $elf $bin
+echo "memory_initialization_radix=16;"
+echo "memory_initialization_vector="
+od -An -t x4 -w4 --endian=little $bin | \
+    paste -sd, -                      | \
+    sed -e 's/$/;/'                   | \
+    xargs | fold -w 40

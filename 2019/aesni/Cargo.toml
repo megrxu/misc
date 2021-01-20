@@ -1,0 +1,22 @@
+[package]
+name = "aesni"
+version = "0.1.0"
+authors = ["Ray Xu <megrxu@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "data"
+path = "src/data.rs"
+
+[[bin]]
+name = "dummy"
+path = "src/dummy.rs"
+
+[lib]
+name = "utils"
+path = "src/lib.rs"
+
+[dependencies]
+rand = "0.7.0"
+lazy_static = "*"
+itertools = "*"
