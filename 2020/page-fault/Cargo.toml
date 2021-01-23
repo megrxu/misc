@@ -1,0 +1,21 @@
+[package]
+name = "page-fault"
+version = "0.1.0"
+authors = ["Ray Xu <megrxu@gmail.com>"]
+edition = "2018"
+
+[[bin]]
+name = "dist"
+path = "src/dist.rs"
+
+[[bin]]
+name = "genp"
+path = "src/genp.rs"
+
+[[bin]]
+name = "analyze"
+path = "src/analyze.rs"
+
+[dependencies]
+lazy_static = "*"
+rand = "*"
