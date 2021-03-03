@@ -10,3 +10,4 @@ od -An -t x4 -w4 --endian=little $bin | \
     paste -sd, -                      | \
     sed -e 's/$/;/'                   | \
     xargs | fold -w 40
+rm $elf $bin
