@@ -11,12 +11,12 @@ class language {a h : Type} (r : Type -> Type -> Type) :=
   (down   : r h ℤ -> r h ℤ)
   (add    : r h ℤ -> r h ℤ -> r h ℤ)
   (mult   : r h ℤ -> r h ℤ -> r h ℤ)
-  -- (gte    : r h ℤ -> r h ℤ -> r h bool)
+  (gte    : r h ℤ -> r h ℤ -> r h bool)
   -- (ifte   : r h bool -> r h a -> r h a -> r h a)
-  -- (neg    : r h bool -> r h bool)
-  -- (or     : r h bool -> r h bool -> r h bool)
-  -- (and    : r h bool -> r h bool -> r h bool)
-  -- (bool   : ℤ -> r h ℤ)
+  (neg    : r h bool -> r h bool)
+  (or     : r h bool -> r h bool -> r h bool)
+  (and    : r h bool -> r h bool -> r h bool)
+  (bool   : ℤ -> r h ℤ)
 
 structure L (h a : Type) := {
   run : h -> a
@@ -45,7 +45,7 @@ instance : language Lmk := {
   int    := arity0,
   add    := arity2 (+),
   mult   := arity2 (*),
-  -- gte    := arity2 (λ x y, to_bool (x ≥ y)),
+  gte    := arity2 ((λ x y, to_bool (x ≥ y)) : int -> int -> bool),
   up     := arity1 (λ x, x + 1),
   down   := arity1 (λ x, x - 1),
 
