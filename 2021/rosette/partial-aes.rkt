@@ -6,6 +6,9 @@
 (define u8? (bitvector 8))
 (define (u8 i) (bv i 8))
 
+(define one (u8 1))
+(define zero (u8 0))
+
 ;; State Mk
 
 (define (make-column l)
@@ -21,7 +24,6 @@
   (bvxor a b))
 
 (define (gf* a b)
-  (define one (u8 1))
   (define (iter a b p)
     (cond
       [(or (bvzero? a) (bvzero? b)) p]
@@ -30,10 +32,20 @@
                           (bvxor a p))])
               (if (bvzero? (msb a))
                   (iter (bvshl a one) (bvlshr b one) p_)
-                  (iter (bvxor (u8 #x1b)
+                  (iter (bvxor one
                                (bvshl a one))
                         (bvlshr b one) p_)))]))
-  (iter a b (u8 0)))
+  (iter a b zero))
+
+(define (gf^n a n)
+  (define (iter acc a n)
+    (cond [(bvzero? n) acc]
+          [(bvzero? (lsb n)) (iter acc (gf* a a) (bvlshr n one))]
+          [else (iter (gf* acc a) (gf* a a) (bvlshr n one))]))
+  (iter one a n))
+
+(define (gf^-1 a)
+  (gf^n a (u8 254)))
 
 (define-grammar (fast-u8 x)
   [expr
@@ -46,6 +58,21 @@
    (choose bvneg bvnot)])
 
 ;; Sbox
+(define (affine q l)
+  (foldl bvxor zero
+         (map (lambda (x) (bvrol q (u8 x))) l)))
+(define (sbox i)
+  (let [(b (gf^-1 i))]
+    (bvxor (affine b '(0 1 2 3 4)) (u8 #x63))))
+
+(define (sbox^-1 i)
+  (let [(s (bvxor (affine i '(1 3 6)) (u8 #x05)))]
+    (gf^-1 s)))
+
+;; (define-symbolic t u8?)
+;; (assert (eq? (gf* t (gf^-1 t)) (u8 1)))
+;; (assert (eq? (gf* t (gf^-1 t)) (u8 1)))
+;; Quite slow
 
 ;; Rcon
 
@@ -64,7 +91,7 @@
             (accumulate-n op init (map cdr seqs)))))
 
 (define (dot-product v w)
-  (accumulate gf+ (u8 0) (map gf* v w)))
+  (accumulate gf+ zero (map gf* v w)))
 
 (define (transpose mat)
   (accumulate-n cons '() mat))
