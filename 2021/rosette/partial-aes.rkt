@@ -17,7 +17,6 @@
 (define (make-state l)
   (map make-column l))
 
-
 ;; GF2pow8 Operations
 
 (define (gf+ a b)
@@ -32,7 +31,7 @@
                           (bvxor a p))])
               (if (bvzero? (msb a))
                   (iter (bvshl a one) (bvlshr b one) p_)
-                  (iter (bvxor one
+                  (iter (bvxor (u8 #x1b)
                                (bvshl a one))
                         (bvlshr b one) p_)))]))
   (iter a b zero))
@@ -69,32 +68,16 @@
   (let [(s (bvxor (affine i '(1 3 6)) (u8 #x05)))]
     (gf^-1 s)))
 
-;; (define-symbolic t u8?)
-;; (assert (eq? (gf* t (gf^-1 t)) (u8 1)))
 ;; (assert (eq? (gf* t (gf^-1 t)) (u8 1)))
 ;; Quite slow
 
-;; Rcon
-
 ;; Matrix Multiplication
 
-(define (accumulate op initial sequence)
-  (if (null? sequence)
-      initial
-      (op (car sequence)
-          (accumulate op initial (cdr sequence)))))
-
-(define (accumulate-n op init seqs)
-  (if (null? (car seqs))
-      '()
-      (cons (accumulate op init (map car seqs))
-            (accumulate-n op init (map cdr seqs)))))
-
 (define (dot-product v w)
-  (accumulate gf+ zero (map gf* v w)))
+  (foldl gf+ zero (map gf* v w)))
 
 (define (transpose mat)
-  (accumulate-n cons '() mat))
+    (apply map list mat))
 
 (define (matrix-*-vector m v)
   (map (lambda (x) (dot-product x v)) m))
@@ -129,3 +112,52 @@
 
 (assert (eq? (mat* mat-mix mat-mix^-1) mat-id))
 (assert (eq? (mat* mat-mix^-1 mat-mix) mat-id))
+
+;; Round Operations
+
+(define (mat-map op m)
+  (map (lambda (col) (map op col)) m))
+
+(define (mix-column m)
+  (mat* m mat-mix))
+
+(define (mix-column^-1 m)
+  (mat* m mat-mix^-1))
+
+(define (subbytes m)
+  (mat-map sbox m))
+
+(define (subbytes^-1 m)
+  (mat-map sbox^-1 m))
+
+(define (lrol l r)
+  (define (iter i res)
+    (cond [(eq? i 0) res]
+          [else (iter (- i 1) (append (cdr res) (list (car res))))]))
+  (iter r l))
+
+;; (define (shift-rows m)
+;;   (transpose (for/lists (acc)
+;;                         ([c (transpose m)]
+;;                          [r '(0 1 2 3)])
+;;                (lrol c r))))
+
+;; (define (shift-rows^-1 m)
+;;   (transpose (for/lists (acc)
+;;                         ([c (transpose m)]
+;;                          [r '(0 3 2 1)])
+;;                (lrol c r))))
+
+;; (define (add-key m k)
+;;   (for/lists (acc)
+;;              ([mv m]
+;;               [kv k])
+;;     (for/lists (accv)
+;;                ([me mv]
+;;                 [ke kv])
+;;       (gf+ me ke))))
+
+;; Note: for/lists is not safe. It operates on symbolic values in current design.
+
+;; (assert (eq? (shift-rows (shift-rows^-1 mat-mix)) mat-mix))
+(assert (eq? (subbytes (subbytes^-1 mat-mix)) mat-mix))
