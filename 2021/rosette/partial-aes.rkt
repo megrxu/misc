@@ -87,6 +87,9 @@
     (map (lambda (x) (matrix-*-vector cols x)) m)))
 (define mat* matrix-*-matrix)
 
+(define (rcon n)
+  (gf^n (u8 2) (u8 n)))
+
 ; Test mat-mul
 
 (define mat-mix^-1
@@ -174,3 +177,5 @@
          mix-columns mix-columns^-1
          sbox sbox^-1
          mat-id mat-mix mat-mix^-1)
+
+(rcon 0)
