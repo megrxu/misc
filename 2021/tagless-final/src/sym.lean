@@ -57,6 +57,8 @@ def eval {r : Type} [i: SYM r] : Expr -> r
 | (And e1 e2) := and (eval e1) (eval e2)
 | (Or  e1 e2) := or (eval e1) (eval e2)
 
+instance : has_repr Expr := ⟨eval⟩
+
 #eval (eval ex0 : Expr)
 #eval (eval ex0 : bool)
 #eval (eval ex1 : string)

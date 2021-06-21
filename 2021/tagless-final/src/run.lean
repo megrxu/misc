@@ -1,22 +1,22 @@
 namespace run
 
-class language {a h : Type} (r : Type -> Type -> Type) :=
-  -- (here   : r (a × h) a)
-  -- (before : r h a -> r (any × h) a)
-  -- (lambda : r (a × h) b -> r h (a -> b))
-  -- (apply  : r h (a -> b) -> (r h a -> r h b))
-  -- (loop   : r h (a -> a) -> r h a)
+class Language (a h : Type) (r : Type* -> Type* -> Type*) :=
+  (here   : r (a × h) a)
+  (before : Π any : Type, r h a -> r (any × h) a)
+  (lambda : Π b : Type, r (a × h) b -> r h (a -> b))
+  (apply  : Π b : Type, r h (a -> b) -> (r h a -> r h b))
+  (loop   : r h (a -> a) -> r h a)
   (int    : ℤ -> r h ℤ)
   (up     : r h ℤ -> r h ℤ)
   (down   : r h ℤ -> r h ℤ)
   (add    : r h ℤ -> r h ℤ -> r h ℤ)
   (mult   : r h ℤ -> r h ℤ -> r h ℤ)
   (gte    : r h ℤ -> r h ℤ -> r h bool)
-  -- (ifte   : r h bool -> r h a -> r h a -> r h a)
+  (ifte   : r h bool -> r h a -> r h a -> r h a)
   (neg    : r h bool -> r h bool)
   (or     : r h bool -> r h bool -> r h bool)
   (and    : r h bool -> r h bool -> r h bool)
-  (bool   : ℤ -> r h ℤ)
+  (bool   : bool -> r h bool)
 
 structure L (h a : Type) := {
   run : h -> a
@@ -36,11 +36,13 @@ def Lmk (h a : Type) : Type := L h a
 
 def apply {a b : Type} (f : a -> b) (arg : a) : b := f arg
 
-instance : language Lmk := {
-  -- here   := {L . run := λ x, match x with (a, b) := a end},
-  -- before := λ h, {L . run := λ x, match x with (a, b) := h.run b end},
-  -- lambda := {L . run := sorry},
-  -- apply  := arity2 apply,
+instance (a h : Type) : Language a h Lmk := {
+  here   := { L . run := prod.fst},
+  before := λ any x, { L . run := x.run ∘ prod.snd},
+  lambda := λ b e, {L . run := λ x y, e.run (y, x)},
+  apply  := λ b, arity2 apply,
+
+  loop   := λ x, { L . run := sorry },
 
   int    := arity0,
   add    := arity2 (+),
@@ -49,8 +51,20 @@ instance : language Lmk := {
   up     := arity1 (λ x, x + 1),
   down   := arity1 (λ x, x - 1),
 
-
-  -- ifte   := {L . run := λ h, if h.run }
+  ifte   := λ e1 e2 e3,
+            { L . run := λ x, if e1.run x
+                              then e2.run x
+                              else e3.run x },
+  neg    := arity1 bnot,
+  or     := arity2 bor,
+  and    := arity2 band,
+  bool   := arity0,
 }
+
+namespace Language
+
+def term (a : Type) := forall r h, Language a h r → r h a
+
+end Language
 
 end run

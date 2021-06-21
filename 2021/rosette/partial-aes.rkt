@@ -178,4 +178,3 @@
          sbox sbox^-1
          mat-id mat-mix mat-mix^-1)
 
-(rcon 0)
