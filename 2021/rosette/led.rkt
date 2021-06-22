@@ -1,8 +1,10 @@
 #lang rosette/safe
 
 (require rosette/lib/synthax)
+(require rosette/solver/smt/z3)
 
-(current-bitwidth 5)
+(current-solver (z3 #:logic 'QF_BV ))
+;; (current-bitwidth #f)
 
 ;; Element datatype
 
@@ -35,20 +37,6 @@
 (define (gf^-1 a)
   (gf^n a (u4 14)))
 
-(define-symbolic x y u4?)
-
-(define-grammar (unary-u4 x)
-  [expr (choose x (?? u4?)
-                ((bop) (expr) (expr))
-                ((uop) (expr)))]
-  [bop  (choose bvadd bvsub bvand
-                bvxor bvor  bvshl
-                bvlshr bvashr)]
-  [uop  (choose bvneg bvnot)])
-
-(define (fast-unary x)
-  (unary-u4 x #:depth 3))
-
 (define (gf*2 x)
   (bvxor (bvshl x (u4 1))
          (bvlshr (bvashr x (u4 4)) (u4 2))))
@@ -61,19 +49,54 @@
   (bvxor (bvand (bvnot (u4 9)) (bvashr x (u4 1)))
          (bvor (bvlshr x (u4 2)) (bvshl x (u4 2)))))
 
-(assert (eq? (gf*2 x) (gf* x (u4 2))))
-(assert (eq? (gf*3 x) (gf* x (u4 3))))
-(assert (eq? (gf*4 x) (gf* x (u4 4))))
+(define (gf*5 x)
+  (bvxor (gf*4 x) x))
 
-(define (tpl x)
-  (gf* x (u4 14)))
+(define (gf*6 x)
+  (gf*2 (gf*3 x)))
 
-(define sol
-   (synthesize
-    #:forall    (list x)
-    #:guarantee (assert (eq? (fast-unary x) (tpl x)))))
+(define (gf*7 x)
+  (bvxor (gf*3 x) (gf*4 x)))
 
-(print-forms sol)
+(define (gf*14 x)
+  (gf*2 (gf*7 x)))
+
+(define-grammar (unary-u4 x)
+  [expr (choose x (?? u4?)
+                ((bop) (expr) (expr))
+                ((uop) (expr)))]
+  [bop  (choose bvadd bvsub bvand
+                bvxor bvor  bvshl
+                bvlshr bvashr)]
+  [uop  (choose bvneg bvnot)])
+
+(define (fast-unary x)
+  (unary-u4 x #:depth 4))
+
+(define-symbolic x y u4?)
+
+(current-solver (z3))
+;; (solve (assert (forall (list x) (eq? (gf* x (u4 2)) (gf*2 x)))))
+;; (solve (assert (forall (list x) (eq? (gf* x (u4 3)) (gf*3 x)))))
+;; (solve (assert (forall (list x) (eq? (gf* x (u4 4)) (gf*4 x)))))
+;; (solve (assert (forall (list x) (eq? (gf* x (u4 5)) (gf*5 x)))))
+;; (solve (assert (forall (list x) (eq? (gf* x (u4 6)) (gf*6 x)))))
+;; (solve (assert (forall (list x) (eq? (gf* x (u4 7)) (gf*7 x)))))
+;; (solve (assert (forall (list x) (eq? (gf* x (gf*14 x)) one))))
+
+(current-solver (z3 #:logic 'QF_BV))
+
+;; Used to generate fast unary functions for bit vectors
+
+;; (define (tpl x)
+;;   (gf* x (u4 7)))
+
+;; (define sol
+;;    (synthesize
+;;     #:forall    (list x)
+;;     #:guarantee (assert (eq? (fast-unary x) (tpl x)))))
+
+;; (print-forms sol)
 
 ;(evaluate (fast-unary one) sol)
 ;(tpl one)
