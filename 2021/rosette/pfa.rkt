@@ -1,6 +1,7 @@
 #lang rosette/safe
 
 (require rosette/lib/synthax)
+(require "datatypes.rkt")
 (require "partial-aes.rkt")
 
 (define (guess-key)
