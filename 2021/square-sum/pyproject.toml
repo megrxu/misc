@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "square-sum"
+version = "0.1.0"
+description = ""
+authors = ["Ray Xu <megrxu@gmail.com>"]
+
+[[tool.poetry.source]]
+name = "zju"
+url = "https://mirrors.zju.edu.cn/pypi/web/simple"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+
+[tool.poetry.dev-dependencies]
+autopep8 = "^1.5.7"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
