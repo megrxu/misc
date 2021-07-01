@@ -1,61 +1,112 @@
-#lang rosette/safe
+#lang rosette
 
 (require rosette/solver/smt/z3)
 (require "datatypes.rkt")
 (require (file "gf2^8.rkt"))
-(require "lut.rkt")
+(require "aes-constants.rkt")
 
-(define aes-sbox
-  (map u8 (list #x63 #x7c #x77 #x7b #xf2 #x6b #x6f #xc5
-                #x30 #x01 #x67 #x2b #xfe #xd7 #xab #x76
-                #xca #x82 #xc9 #x7d #xfa #x59 #x47 #xf0
-                #xad #xd4 #xa2 #xaf #x9c #xa4 #x72 #xc0
-                #xb7 #xfd #x93 #x26 #x36 #x3f #xf7 #xcc
-                #x34 #xa5 #xe5 #xf1 #x71 #xd8 #x31 #x15
-                #x04 #xc7 #x23 #xc3 #x18 #x96 #x05 #x9a
-                #x07 #x12 #x80 #xe2 #xeb #x27 #xb2 #x75
-                #x09 #x83 #x2c #x1a #x1b #x6e #x5a #xa0
-                #x52 #x3b #xd6 #xb3 #x29 #xe3 #x2f #x84
-                #x53 #xd1 #x00 #xed #x20 #xfc #xb1 #x5b
-                #x6a #xcb #xbe #x39 #x4a #x4c #x58 #xcf
-                #xd0 #xef #xaa #xfb #x43 #x4d #x33 #x85
-                #x45 #xf9 #x02 #x7f #x50 #x3c #x9f #xa8
-                #x51 #xa3 #x40 #x8f #x92 #x9d #x38 #xf5
-                #xbc #xb6 #xda #x21 #x10 #xff #xf3 #xd2
-                #xcd #x0c #x13 #xec #x5f #x97 #x44 #x17
-                #xc4 #xa7 #x7e #x3d #x64 #x5d #x19 #x73
-                #x60 #x81 #x4f #xdc #x22 #x2a #x90 #x88
-                #x46 #xee #xb8 #x14 #xde #x5e #x0b #xdb
-                #xe0 #x32 #x3a #x0a #x49 #x06 #x24 #x5c
-                #xc2 #xd3 #xac #x62 #x91 #x95 #xe4 #x79
-                #xe7 #xc8 #x37 #x6d #x8d #xd5 #x4e #xa9
-                #x6c #x56 #xf4 #xea #x65 #x7a #xae #x08
-                #xba #x78 #x25 #x2e #x1c #xa6 #xb4 #xc6
-                #xe8 #xdd #x74 #x1f #x4b #xbd #x8b #x8a
-                #x70 #x3e #xb5 #x66 #x48 #x03 #xf6 #x0e
-                #x61 #x35 #x57 #xb9 #x86 #xc1 #x1d #x9e
-                #xe1 #xf8 #x98 #x11 #x69 #xd9 #x8e #x94
-                #x9b #x1e #x87 #xe9 #xce #x55 #x28 #xdf
-                #x8c #xa1 #x89 #x0d #xbf #xe6 #x42 #x68
-                #x41 #x99 #x2d #x0f #xb0 #x54 #xbb #x16)))
-
-(define (sbox x)
-  (get-item x (msb-tree aes-sbox) 7))
+;; Solve
 
 (current-solver (z3 #:logic 'QF_BV))
-(define-symbolic x0 x1 x2 x3 x4 e u8?)
+
+(define-symbolic x0 x1 x2 x3 x4 u8?)
 
 ;; (define sol
 ;;   (solve (assert (eq? (sbox x0) (u8 #x63)))))
 ;; (evaluate x0 sol)
 
-(define example
-  (begin
-    (assert (eq? (sbox (gf+ x0 (gf* (u8 2) e))) (gf+ (sbox x0) (u8 #xe7))))
-    (assert (eq? (sbox (gf+ x1 e))              (gf+ (sbox x1) (u8 #x51))))
-    (assert (eq? (sbox (gf+ x2 e))              (gf+ (sbox x2) (u8 #x47))))
-    (assert (eq? (sbox (gf+ x3 (gf* (u8 3) e))) (gf+ (sbox x3) (u8 #x99)))))
-  )
+(define (example f e)
+  (let [(e0 (car f))
+        (e1 (cadr f))
+        (e2 (caddr f))
+        (e3 (cadddr f))]
+    (assert (eq? (sbox (gf+ x0 (gf*2 e))) (gf+ (sbox x0) e0)))
+    (assert (eq? (sbox (gf+ x1 e))        (gf+ (sbox x1) e1)))
+    (assert (eq? (sbox (gf+ x2 e))        (gf+ (sbox x2) e2)))
+    (assert (eq? (sbox (gf+ x3 (gf*3 e))) (gf+ (sbox x3) e3)))))
 
+;; To generate the diff mats
+;; (let [(a (u8 #xeb))
+;;       (b (u8 #x40))
+;;       (c (u8 #xf2))
+;;       (d (u8 #x1e))
+;;       (e (u8 #xb3))]
+;;   (println (gf+ (sbox a) (sbox (gf+ a (gf*2 e)))))
+;;   (println (gf+ (sbox b) (sbox (gf+ b e))))
+;;   (println (gf+ (sbox c) (sbox (gf+ c e))))
+;;   (println (gf+ (sbox d) (sbox (gf+ d (gf*3 e))))))
+
+(define-symbolic e0 e1 e2 u8?)
+(define f0 (map u8 (list #xe7 #x51 #x47 #x99)))
+(define f1 (map u8 (list #xca #x3b #xf4 #x85)))
+(define f2 (map u8 (list #x79 #x04 #x0a #x02)))
+
+;; Use the diff to get the error
 (define sol
-  (solve example))
+  (solve (begin
+           (example f0 e0)  ;; e0 = 0x1e
+           (example f1 e1)  ;; e1 = 0xe1
+           (example f2 e2)  ;; e2 = 0xb3
+           )))
+
+(define-symbolic t k u8?)
+
+(define (affine x)
+  (bvxor (bvxor (bvrol x (u8 1))
+                (bvrol x (u8 2)))
+         (bvxor (bvrol x (u8 3))
+                (bvxor x
+                       (bvrol x (u8 4))))))
+
+(define (affine^-1 x)
+  (bvxor (bvrol x (u8 1))
+         (bvxor (bvrol x (u8 3))
+                (bvrol x (u8 6)))))
+
+(define (make-theta-1 e)
+  (lambda (de) (gf^-1 (gf* e (affine^-1 de)))))
+(define (make-theta-2 e)
+  (lambda (de) (gf^-1 (gf* (gf*2 e) (affine^-1 de)))))
+(define (make-theta-3 e)
+  (lambda (de) (gf^-1 (gf* (gf*3 e) (affine^-1 de)))))
+
+;; Focus on one fault
+
+(define (get-sol theta)
+  (let [(sol (solve (assert (eq? (l t) theta))))]
+    (let [(alpha (evaluate t sol))]
+      (list alpha
+            (bvxor alpha one)))))
+(define (id a) a)
+(define (get-key-1 e t f)
+  (gf+ (sbox (gf* t e)) f))
+(define (get-key-2 e t f)
+  (gf+ (sbox (gf*2 (gf* t e))) f))
+(define (get-key-3 e t f)
+  (gf+ (sbox (gf*3 (gf* t e))) f))
+
+(define (exploit f e)
+  (let* [(e_ (evaluate e sol))
+         (theta-1 (make-theta-1 e_))
+         (theta-2 (make-theta-2 e_))
+         (theta-3 (make-theta-3 e_))]
+    (match f [(list fa fb fc fd)
+              (let*-values [((a b c d) (values (theta-2 fa)
+                                               (theta-1 fb)
+                                               (theta-1 fc)
+                                               (theta-3 fd)))
+                            ((sa sb sc sd) (values (get-sol a)
+                                                   (get-sol b)
+                                                   (get-sol c)
+                                                   (get-sol d)))]
+                (values (map (lambda (t) (get-key-2 e_ t fa)) sa)
+                        (map (lambda (t) (get-key-1 e_ t fb)) sb)
+                        (map (lambda (t) (get-key-1 e_ t fc)) sc)
+                        (map (lambda (t) (get-key-3 e_ t fd)) sd)))])))
+
+(exploit f0 e0)
+(println "//")
+(exploit f1 e1)
+(println "//")
+(exploit f2 e2)
+

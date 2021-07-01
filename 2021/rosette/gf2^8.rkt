@@ -1,5 +1,7 @@
 #lang rosette/safe
 
+(require rosette/lib/synthax)
+(require rosette/solver/smt/z3)
 (require "datatypes.rkt")
 
 ;; Element datatype
@@ -34,5 +36,52 @@
 
 (define (gf^-1 a)
   (gf^n a (u8 254)))
+
+(define (gf*2 x)
+  (bvxor (bvadd x x)
+         (bvand (u8 #x1b)
+                (bvashr x (u8 #x0a)))))
+
+(define (gf*3 x)
+  (bvxor (bvxor x (bvadd x x))
+         (bvand (bvneg (u8 #xe5))
+                (bvashr x (u8 #x3c)))))
+
+(current-solver (z3 #:logic 'QF_BV))
+
+(define-symbolic x y u8?)
+
+;; Used to generate fast unary functions for bit vectors
+;; (define-grammar (unary-u8 x)
+;;   [expr (choose x (?? u8?)
+;;                 ((bop) (expr) (expr))
+;;                 ((uop) (expr)))]
+;;   [bop  (choose bvadd bvsub bvand
+;;                 bvxor bvor  bvshl
+;;                 bvlshr bvashr)]
+;;   [uop  (choose bvneg bvnot)])
+
+;; (define (fast-unary x)
+;;   (unary-u8 x #:depth 3))
+
+;; (define (affine q l)
+;;   (foldl bvxor zero
+;;          (map (lambda (x) (bvrol q (u8 x))) l)))
+
+;; (define (tpl x)
+;;   (affine x '(1 2 3 4 5)))
+
+;; (define sol
+;;    (synthesize
+;;     #:forall    (list x)
+;;     #:guarantee (assert (eq? (fast-unary x) (tpl x)))))
+
+;; (print-forms sol)
+
+;(evaluate (fast-unary one) sol)
+;(tpl one)
+
+;; (current-solver (z3))
+;; (verify (assert (forall (list x) (eq? (gf* x (u8 3)) (gf*3 x)))))
 
 (provide (all-defined-out))
