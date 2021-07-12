@@ -1,7 +1,5 @@
 # Residue Number System
 
-
-
 References:
 - [Residue Number System](https://en.wikipedia.org/wiki/Residue_number_system)
 - [Hardware Based Asymmetrical Cryptography Supported on Residue Number System](https://pdfs.semanticscholar.org/73fc/bb346295eb5e8438e425fb8a32a290082400.pdf)

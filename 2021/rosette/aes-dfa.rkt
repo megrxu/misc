@@ -1,6 +1,7 @@
 #lang rosette
 
 (require rosette/solver/smt/z3)
+(require rosette/lib/synthax)
 (require "datatypes.rkt")
 (require (file "gf2^8.rkt"))
 (require "aes-constants.rkt")
@@ -10,10 +11,6 @@
 (current-solver (z3 #:logic 'QF_BV))
 
 (define-symbolic x0 x1 x2 x3 x4 u8?)
-
-;; (define sol
-;;   (solve (assert (eq? (sbox x0) (u8 #x63)))))
-;; (evaluate x0 sol)
 
 (define (example f e)
   (let [(e0 (car f))
@@ -42,6 +39,7 @@
 (define f2 (map u8 (list #x79 #x04 #x0a #x02)))
 
 ;; Use the diff to get the error
+
 (define sol
   (solve (begin
            (example f0 e0)  ;; e0 = 0x1e
@@ -77,13 +75,16 @@
     (let [(alpha (evaluate t sol))]
       (list alpha
             (bvxor alpha one)))))
+
 (define (id a) a)
 (define (get-key-1 e t f)
-  (gf+ (sbox (gf* t e)) f))
+  (sbox (gf* t e)))
 (define (get-key-2 e t f)
-  (gf+ (sbox (gf*2 (gf* t e))) f))
+  (sbox (gf*2 (gf* t e))))
 (define (get-key-3 e t f)
-  (gf+ (sbox (gf*3 (gf* t e))) f))
+  (sbox (gf*3 (gf* t e))))
+
+;; Use the error and the diff error to recover the key
 
 (define (exploit f e)
   (let* [(e_ (evaluate e sol))
@@ -104,9 +105,39 @@
                         (map (lambda (t) (get-key-1 e_ t fc)) sc)
                         (map (lambda (t) (get-key-3 e_ t fd)) sd)))])))
 
-(exploit f0 e0)
-(println "//")
-(exploit f1 e1)
-(println "//")
-(exploit f2 e2)
+;; Find the union set of key
 
+(define-symbolic k0 k1 k2 k3 u8?)
+
+(define (contains l b)
+  (ormap (lambda (e) (eq? e b)) l))
+
+(let-values
+    [((kg00 kg01 kg02 kg03) (exploit f0 e0))
+     ((kg10 kg11 kg12 kg13) (exploit f1 e1))
+     ((kg20 kg21 kg22 kg23) (exploit f2 e2))]
+  (let [(key (solve (begin (assert (&& (contains kg00 k0) (contains kg10 k0)))
+                           (assert (&& (contains kg01 k1) (contains kg11 k1)))
+                           (assert (&& (contains kg02 k2) (contains kg12 k2)))
+                           (assert (&& (contains kg03 k3) (contains kg13 k3))))))]
+    (evaluate (list k0 k1 k2 k3) key))
+  )
+
+
+(define-grammar (unary-u8 x)
+  [expr (choose x
+                ((bop) (expr) (expr))
+                ((uop) (expr)))]
+  [bop  (choose bvxor)]
+  [uop  (choose id sbox sbox^-1 gf*2 gf*2 gf*3)])
+
+(define (fast-unary x)
+  (unary-u8 x #:depth 5))
+
+(define get-key
+   (solve (assert (&& (eq? (fast-unary (u8 #xe9)) (u8 #xd0))
+                      (eq? (fast-unary (u8 #x09)) (u8 #x63))
+                      (eq? (fast-unary (u8 #x89)) (u8 #x0c))
+                      (eq? (fast-unary (u8 #x72)) (u8 #x89))))))
+
+(print-forms get-key)

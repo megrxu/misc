@@ -11,47 +11,19 @@ def init(num):
                 g[i].append(compl)
     return g
 
+def square_sums(n):
+    g = init(n)
+    def dfs():
+        if not inp: yield res
+        for v in tuple(inp):
+            if not res or (res[-1] in g[v]):
+                res.append(v)
+                inp.discard(v)
+                yield from dfs()
+                inp.add(res.pop())
 
-def find_end(g, num):
-    for i in range(1, num+1):
-        if len(g[i]) == 1:
-            return i
-
-
-def connect(g: dict, num):
-    m = find_end(g, num)
-    g[-1] = [m]
-    p = find_path(g, -1, [], set(range(1, num + 1)))
-    return p
-
-
-def rec_add(g: dict, i: int, s: set):
-    for j in g[i]:
-        if j not in s:
-            s.add(j)
-            rec_add(g, j, s)
-
-
-def find_path(g, i, l, r):
-    for nxt in g[i]:
-        if nxt in r:
-            r.remove(nxt)
-            rp = find_path(g, nxt, l + [nxt], r)
-            if rp:
-                return rp
-            else:
-                r.add(nxt)
-                continue
-    if len(r) != 0:
-        return False
-    else:
-        return l
-
-
-def square_sums(num):
-    g = init(num)
-    return connect(g, num)
-
+    inp, res = set(range(1,n+1)), []
+    return next(dfs(), False)
 
 if __name__ == "__main__":
-    print(square_sums(37))
+    print(square_sums(15))
