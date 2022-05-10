@@ -1,0 +1,17 @@
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/png" href="/favicon.png">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description"
+    content="{{ if .Params.tags }}{{ range .Params.tags }}{{.}} {{end}}{{ else if .Site.Params.Description }}{{ .Site.Params.description }}{{ else }} {{ .Site.Title }} {{ end }}" />
+  {{ with .Page.Params.cover }}
+  <meta property="og:image" content="{{ . }}" />
+  {{ end }}
+  {{- template "_internal/opengraph.html" . -}}
+  <title>{{ $isHomePage := eq .Title .Site.Title }}{{ .Title }}{{ if eq $isHomePage false }} |
+    {{ .Site.Title }}{{ end }}</title>
+  <link rel="canonical" href="{{ .Permalink }}" />
+  {{- $styles := resources.Get "index.scss" | resources.ExecuteAsTemplate "theme.scss" . | resources.ToCSS | resources.Minify | resources.Fingerprint }}
+  <link rel="stylesheet" href="{{ $styles.RelPermalink }}" integrity="{{ $styles.Data.Integrity }}">
+  <link href="{{ .Site.BaseURL }}index.xml" rel="alternate" type="application/rss+xml" title="{{ .Site.Title }}" />
+</head>

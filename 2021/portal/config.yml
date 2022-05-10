@@ -1,0 +1,10 @@
+baseURL: "http://localhost"
+
+enableEmoji: true
+defaultContentLanguage : "zh"
+preserveTaxonomyNames: true
+theme: plain
+buildFuture: true
+
+outputs:
+  home: ["HTML", "RSS"]
