@@ -1,0 +1,22 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+autopep8 = "*"
+
+[packages]
+requests = "*"
+nltk = "*"
+stanford-openie = "*"
+stanfordcorenlp = "*"
+torch = "*"
+rdflib = "*"
+networkx = "*"
+matplotlib = "*"
+quepy = "*"
+
+[requires]
+python_version = "3.8"

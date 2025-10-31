@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <title>One Piece Online Q&A</title>
+    <link rel="stylesheet" href=https://cdn.jsdelivr.net/gh/kognise/water.css@latest/dist/light.min.css> <meta
+        name="viewport" content="width=device-width,user-scalable=no,maximum-scale=1,initial-scale=1">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <div class="content">
+        <h1>One Piece Characters Online Q&A</h1>
+
+        <h2>Question:</h2>
+        <textarea id="question" placeholder='Question'></textarea>
+        <input onclick="submit()" type="submit"></input>
+
+        <h2>Answer:</h2>
+        <textarea id="answer" readonly placeholder='Answer' style="min-height: 300px;"></textarea>
+
+        <h2>Examples:</h2>
+        <ul>
+            <li>Who is the brother of Sabo?</li>
+            <li>Who lives in Marineford Arc?</li>
+            <li>Who is the grandmother of Leo?</li>
+            <li>Who is Sanji?</li>
+            <li>Who is the member of Spade Pirates?</li>
+            <li>Who is the ally of Straw Hat Pirates?</li>
+        </ul>
+
+    </div>
+
+    <hr>
+
+    <p>With <a href="http://flask.palletsprojects.com/">Flask</a> and <a href="https://rdflib.readthedocs.io/">RDFLib</a>.</p>
+    <p>Data: <a href="/op-data.xml">op-data.xml</a></p>
+</body>
+
+<script>
+    function submit() {
+        //do things on submit
+        $.ajax({
+            type: "GET",
+            url: "ask?q="+ $('#question')[0].value,
+            beforeSend: function () {
+                //before send data
+                console.log($('#question')[0].value)
+                $('#answer').val("Processing... Please wait.")
+            },
+            success: function (data) {
+                // the data
+                $('#answer').val(data)
+            }
+        });
+    }
+</script>
+
+</html>

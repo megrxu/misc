@@ -1,0 +1,1 @@
+This template is used to add a background to a gallery subpage.

@@ -1,0 +1,19 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+pylint = "*"
+autopep8 = "*"
+
+[packages]
+quepy = "*"
+flask = "*"
+requests = "*"
+rdflib = "*"
+docopt = "*"
+refo = "*"
+
+[requires]
+python_version = "2.7"
